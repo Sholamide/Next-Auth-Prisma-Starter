@@ -15,6 +15,16 @@
     "jsx": "preserve",
     "incremental": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "pages/signup.js",
+    "pages/signin.js",
+    "pages/index.js",
+    "components/Input.js",
+    "components/ImageUpload.js",
+    "lib/bcrypt.js"
+  ],
   "exclude": ["node_modules"]
 }
