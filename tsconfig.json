@@ -21,7 +21,7 @@
     "**/*.tsx",
     "pages/signup.js",
     "pages/signin.js",
-    "pages/index.js",
+    "pages/index.tsx",
     "components/Input.js",
     "components/ImageUpload.js",
     "lib/bcrypt.js"

@@ -22,6 +22,7 @@ const LogInForm = () => {
       .email("Invalid email")
       .required("This field is required"),
   });
+
   const {
     register,
     handleSubmit,
