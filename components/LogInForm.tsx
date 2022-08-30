@@ -5,6 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { hashPassword } from "../lib/bcrypt";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
 
 type SignInInputs = {
   email: string;
@@ -32,19 +33,10 @@ const LogInForm = () => {
     setSubmitting(true);
     try {
       const { email, password } = data;
-      signIn("credentials", { callbackUrl: "/", email, password });
+      signIn("signin", { callbackUrl: "/", email, password });
       setTimeout(() => {
         setSubmitting(false);
       }, 800);
-      const user = {
-        email: email,
-        password: hashPassword(password),
-      };
-      console.log(user);
-      console.log(
-        "User" + "with " + user.email + user.password + "has been signed up."
-      );
-      alert(user.email + "  " + user.password);
     } catch (error) {
       console.log(error);
       setSubmitting(false);
@@ -87,7 +79,7 @@ const LogInForm = () => {
           type="submit"
           className="w-full py-2 px-4 mt-5 rounded-md text-white bg-blue-600 shadow-lg"
         >
-          Login
+          {isSubmitting ? <ClipLoader /> : <p>Login</p>}
         </button>
       </form>
       <button

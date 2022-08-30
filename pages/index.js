@@ -1,18 +1,10 @@
 import { Fragment, useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import homes from "../data.json";
 import AuthModal from "../components/AuthModal";
 import { Menu, Transition } from "@headlessui/react";
 import { useSession, signOut } from "next-auth/react";
-import {
-  HeartIcon,
-  HomeIcon,
-  LogoutIcon,
-  PlusIcon,
-  SparklesIcon,
-  UserIcon,
-} from "@heroicons/react/outline";
+import { LogoutIcon, UserIcon } from "@heroicons/react/outline";
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import Link from "next/link";
 
@@ -127,7 +119,7 @@ const Home = () => {
             onClick={openModal}
             className="ml-4 mt-10 text-xl px-4 py-2 my-3 rounded-md bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-white transition"
           >
-            Log in
+            Login / Register
           </button>
         )}
         <AuthModal show={showModal} onClose={closeModal} />

@@ -5,9 +5,12 @@ import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { hashPassword } from "../lib/bcrypt";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
-import Select from "react-select";
-type SignUpInputs = {
-  role: string;
+import { Role } from "@prisma/client";
+import axios from "axios";
+import { ClipLoader } from "react-spinners";
+
+type ISignUpValues = {
+  role: Role;
   name: string;
   email: string;
   password: string;
@@ -26,33 +29,52 @@ const SignUpForm = () => {
 
     setUserRole(role);
   };
+
+  const createAccountHandler = async (data: ISignUpValues) => {
+    const response = axios.post("/api/auth/user/signup", {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+    });
+    return response;
+  };
+
+  const onSubmit = async (data: ISignUpValues) => {
+    setSubmitting(true);
+    try {
+      createAccountHandler(data)
+        .then((response) => {
+          signIn("signin", {
+            callbackUrl: "/",
+            email: data.email,
+            password: data.password,
+          });
+        })
+        .catch((error) => {});
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 850);
+    } catch (error) {
+      console.log(error);
+      setSubmitting(false);
+    }
+  };
+
   const SignUpSchema = Yup.object().shape({
     email: Yup.string()
       .trim()
       .email("Invalid email")
       .required("This field is required"),
   });
+
   const {
     register,
     handleSubmit,
     control,
     watch,
     formState: { errors },
-  } = useForm<SignUpInputs>();
-  const onSubmit: SubmitHandler<SignUpInputs> = (data) => {
-    setSubmitting(true);
-    try {
-      signIn("signup", { callbackUrl: "/", data });
-      setTimeout(() => {
-        setSubmitting(false);
-      }, 800);
-
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-      setSubmitting(false);
-    }
-  };
+  } = useForm<ISignUpValues>();
 
   const signUpWithGoogle = () => {
     // TODO: Perform Google auth
@@ -63,6 +85,7 @@ const SignUpForm = () => {
       callbackUrl: window.location.href,
     });
   };
+
   return (
     <div className="mt-10">
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -76,22 +99,6 @@ const SignUpForm = () => {
           <option value="INDIVIDUAL">INDIVIDUAL</option>
           <option value="CORPORATE">CORPORATE</option>
         </select>
-        {/* <Controller
-          name="role"
-          control={control}
-          render={({}) => (
-            <Select
-              isSearchable={false}
-              defaultValue={userRole}
-              onChange={handleUserRole}
-              placeholder="Select role"
-              options={userRoles}
-              instanceId={useId()}
-            />
-          )}
-          rules={{ required: true }}
-        ></Controller> */}
-
         <input
           placeholder="Full Name"
           {...register("name")}
@@ -133,7 +140,7 @@ const SignUpForm = () => {
           type="submit"
           className="w-full py-2 px-4 mt-5 rounded-md text-white bg-blue-600 shadow-lg"
         >
-          Signup
+          {isSubmitting ? <ClipLoader /> : <p>Signup</p>}
         </button>
       </form>
       <button

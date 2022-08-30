@@ -12,7 +12,7 @@ datasource db {
 
 enum Role {
   INDIVIDUAL
-  COOPERATE
+  CORPORATE
 }
 
 model Account {
