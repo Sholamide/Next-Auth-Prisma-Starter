@@ -3,7 +3,7 @@ import { ReadableStreamBYOBRequest } from "stream/web";
 import { hashPassword } from "../../../../lib/bcrypt";
 import { prisma } from "../../../../lib/prisma";
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
   let isCurrentUser;
   if (req.method === "POST") {
     isCurrentUser = await prisma.user.findFirst({
@@ -40,4 +40,4 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       return res.status(500).json({ statusCode: 500, message: error.message });
     }
   }
-};
+}

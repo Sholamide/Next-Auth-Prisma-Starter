@@ -65,7 +65,7 @@ export const authOptions: NextAuthOptions = {
             const isValid = await verifyPassword(password, maybeUser!.password);
 
             if (!isValid) {
-              throw new Error("Invalid Credentials");
+              throw new Error("Username and password does not match");
             }
           }
           return {
@@ -90,7 +90,7 @@ export const authOptions: NextAuthOptions = {
     colorScheme: "light",
   },
   callbacks: {
-    async jwt({ token, user, account, profile, isNewUser }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;

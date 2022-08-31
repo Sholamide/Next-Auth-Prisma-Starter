@@ -1,8 +1,7 @@
-import React, { useState, useId } from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import { signIn } from "next-auth/react";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { hashPassword } from "../lib/bcrypt";
+import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { Role } from "@prisma/client";
@@ -19,16 +18,6 @@ type ISignUpValues = {
 const SignUpForm = () => {
   const [isSubmitting, setSubmitting] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [userRole, setUserRole] = useState(null);
-  let userRoles = [
-    { value: "INDIVIDUAL", label: "Individual" },
-    { value: "CORPORATE", label: "Corporate" },
-  ];
-  const handleUserRole = (userRole: any) => {
-    const role = userRole.value;
-
-    setUserRole(role);
-  };
 
   const createAccountHandler = async (data: ISignUpValues) => {
     const response = axios.post("/api/auth/user/signup", {
@@ -43,7 +32,7 @@ const SignUpForm = () => {
   const onSubmit = async (data: ISignUpValues) => {
     setSubmitting(true);
     try {
-      createAccountHandler(data)
+      await createAccountHandler(data)
         .then((response) => {
           signIn("signin", {
             callbackUrl: "/",
@@ -61,18 +50,9 @@ const SignUpForm = () => {
     }
   };
 
-  const SignUpSchema = Yup.object().shape({
-    email: Yup.string()
-      .trim()
-      .email("Invalid email")
-      .required("This field is required"),
-  });
-
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     formState: { errors },
   } = useForm<ISignUpValues>();
 
@@ -93,7 +73,6 @@ const SignUpForm = () => {
         <select
           className="px-3 py-2 text-gray-800 w-full bg-white focus:outline-none border border-gray-500 rounded-md mb-2"
           {...register("role")}
-          onChange={handleUserRole}
           placeholder="Select role"
         >
           <option value="INDIVIDUAL">INDIVIDUAL</option>
