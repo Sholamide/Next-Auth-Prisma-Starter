@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { SetStateAction, useEffect, useState } from "react";
 import * as Yup from "yup";
 import { signIn } from "next-auth/react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { hashPassword } from "../lib/bcrypt";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useRouter } from "next/router";
 
 type SignInInputs = {
   email: string;
@@ -15,26 +17,34 @@ type SignInInputs = {
 const LogInForm = () => {
   const [isSubmitting, setSubmitting] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const [loginError, setLoginError] = useState<string | string[]>("");
+  const router = useRouter();
 
-  const SignInSchema = Yup.object().shape({
+  useEffect(() => {
+    if (router.query.error) {
+      setLoginError(router.query!.error);
+    }
+  }, [router]);
+
+  const signInSchema = Yup.object().shape({
     email: Yup.string()
       .trim()
       .email("Invalid email")
-      .required("This field is required"),
+      .required("Enter an email"),
+    password: yup.string().required("Password is required"),
   });
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
-  } = useForm<SignInInputs>();
+  } = useForm<SignInInputs>({ resolver: yupResolver(signInSchema) });
 
   const onSubmit: SubmitHandler<SignInInputs> = (data) => {
     setSubmitting(true);
     try {
       const { email, password } = data;
-      signIn("signin", { callbackUrl: "/", email, password });
+      signIn("login", { callbackUrl: "/", email, password });
       setTimeout(() => {
         setSubmitting(false);
       }, 800);
@@ -76,6 +86,7 @@ const LogInForm = () => {
         {errors?.password && (
           <p className="mt-[2px] text-red-600">{errors.password.message}</p>
         )}
+        {loginError && <p className="mt-[2px] text-red-600">{loginError}</p>}
         <button
           type="submit"
           className="w-full py-2 px-4 mt-5 rounded-md text-white bg-blue-600 shadow-lg"
