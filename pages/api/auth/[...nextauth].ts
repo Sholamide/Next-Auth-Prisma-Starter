@@ -27,14 +27,9 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log(credentials);
-          const { email, password } = credentials as {
-            email: string;
-            password: string;
-          };
-          let maybeUser = await prisma.user.findFirst({
+          let user = await prisma.user.findFirst({
             where: {
-              email,
+              email: credentials?.email,
             },
             select: {
               id: true,
@@ -44,35 +39,59 @@ export const authOptions: NextAuthOptions = {
               role: true,
             },
           });
-          if (!maybeUser) {
-            if (!password || !email) {
-              throw new Error("Invalid Credentials");
-            }
-            maybeUser = await prisma.user.create({
-              data: {
-                email: email,
-                password: await hashPassword(password),
-              },
-              select: {
-                id: true,
-                email: true,
-                password: true,
-                name: true,
-                role: true,
-              },
-            });
-          } else {
-            const isValid = await verifyPassword(password, maybeUser!.password);
-
+          return {
+            id: user?.id,
+            email: user?.email,
+            name: user?.name,
+            role: user?.role,
+          };
+        } catch (error) {
+          console.log(error);
+          throw error;
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: "login",
+      type: "credentials",
+      credentials: {
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "iam@awesome.com",
+        },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          let maybeUser = await prisma.user.findFirst({
+            where: {
+              email: credentials?.email,
+            },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+              name: true,
+              role: true,
+            },
+          });
+          if (maybeUser) {
+            const isValid = await verifyPassword(
+              credentials?.password,
+              maybeUser!.password
+            );
             if (!isValid) {
               throw new Error("Username and password does not match");
             }
+          } else {
+            throw new Error("No account exists for this user");
           }
           return {
-            id: maybeUser.id,
-            email: maybeUser.email,
-            name: maybeUser.name,
-            role: maybeUser.role,
+            id: maybeUser?.id,
+            email: maybeUser?.email,
+            name: maybeUser?.name,
+            role: maybeUser?.role,
           };
         } catch (error) {
           console.log(error);

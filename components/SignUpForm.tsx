@@ -1,19 +1,52 @@
 import React, { useState } from "react";
-import * as Yup from "yup";
+import * as yup from "yup";
 import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { Role } from "@prisma/client";
 import axios from "axios";
 import { ClipLoader } from "react-spinners";
-
+import { yupResolver } from "@hookform/resolvers/yup";
+import Select from "react-select";
 type ISignUpValues = {
-  role: Role;
+  userrole: Role;
   name: string;
   email: string;
   password: string;
+  verifypassword: string;
 };
+
+const user_roles = [
+  { label: "Role", value: "ROLE" },
+  { label: "Individual", value: "Individual" },
+  { label: "Corporate", value: "Corporate" },
+];
+
+const signUpSchema = yup.object().shape({
+  userrole: yup
+    .string()
+    .required("Select a user role")
+    .oneOf(["Individual", "Corporate"])
+    .label("User role"),
+  name: yup.string().required("Name is required"),
+  email: yup
+    .string()
+    .trim()
+    .email("Need to be a valid email")
+    .required("Email is required"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .matches(
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
+      "Must Contain at least 8 characters, One Uppercase, One Lowercase, One Number and one special case Character"
+    ),
+  verifypassword: yup
+    .string()
+    .required("Please confirm password")
+    .oneOf([yup.ref("password")], "Passwords do not match."),
+});
 
 const SignUpForm = () => {
   const [isSubmitting, setSubmitting] = useState(false);
@@ -24,13 +57,14 @@ const SignUpForm = () => {
       name: data.name,
       email: data.email,
       password: data.password,
-      role: data.role,
+      role: data.userrole.toUpperCase(),
     });
     return response;
   };
 
   const onSubmit = async (data: ISignUpValues) => {
     setSubmitting(true);
+    console.log(data);
     try {
       await createAccountHandler(data)
         .then((response) => {
@@ -47,14 +81,16 @@ const SignUpForm = () => {
     } catch (error) {
       console.log(error);
       setSubmitting(false);
+      toast.success("Account Created");
     }
   };
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-  } = useForm<ISignUpValues>();
+  } = useForm<ISignUpValues>({ resolver: yupResolver(signUpSchema) });
 
   const signUpWithGoogle = () => {
     // TODO: Perform Google auth
@@ -70,50 +106,66 @@ const SignUpForm = () => {
     <div className="mt-10">
       <form onSubmit={handleSubmit(onSubmit)}>
         <label className="text-md text-gray-700"> Select User Role</label>
-        <select
-          className="px-3 py-2 text-gray-800 w-full bg-white focus:outline-none border border-gray-500 rounded-md mb-2"
-          {...register("role")}
-          placeholder="Select role"
-        >
-          <option value="INDIVIDUAL">INDIVIDUAL</option>
-          <option value="CORPORATE">CORPORATE</option>
-        </select>
+        <Controller
+          name="userrole"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Select
+              isSearchable={false}
+              options={user_roles}
+              className="form-control"
+              value={user_roles.find((r) => r.value === value)}
+              onChange={(val) => onChange(val?.value)}
+            />
+          )}
+        />
+        <span className="mt-[1px] text-[8px] rounded-md text-red-600">
+          {errors["userrole"]?.message}
+        </span>
         <input
+          id="name"
           placeholder="Full Name"
           {...register("name")}
           className="flex border bg-white rounded-md w-full mt-2 border-gray-200 px-2 pl-3 focus:outline-none shadow-lg text-gray-600 py-2"
         />
         {errors?.name && (
-          <p className="mt-[2px]  rounded-md text-red-600">
+          <span className="mt-[1px] text-[8px] rounded-md text-red-600">
             {errors.name.message}
-          </p>
+          </span>
         )}
         <input
+          id="email"
           placeholder="Email"
           {...register("email")}
           className="flex border bg-white rounded-md w-full mt-2 border-gray-200 px-2 pl-3 focus:outline-none shadow-lg text-gray-600 py-2"
         />
         {errors?.email && (
-          <p className="mt-[2px]  rounded-md text-red-600">
+          <span className="mt-[1px] text-[8px] rounded-md text-red-600">
             {errors.email.message}
-          </p>
+          </span>
         )}
 
         <input
+          id="password"
           placeholder="Password"
           {...register("password")}
           className="flex border pl-3 w-full bg-white rounded-md  border-gray-200 shadow-lg focus:outline-none text-gray-600 mt-2 px-2 py-2"
         />
         {errors?.password && (
-          <p className="mt-[2px] text-red-600">{errors.password.message}</p>
+          <span className="mt-[1px] text-[8px] text-red-600">
+            {errors.password.message}
+          </span>
         )}
         <input
+          id="verifypassword"
           placeholder="Verify Password"
-          {...register("password")}
+          {...register("verifypassword")}
           className="flex border pl-3 w-full bg-white rounded-md  border-gray-200 shadow-lg focus:outline-none text-gray-600 mt-2 px-2 py-2"
         />
-        {errors?.password && (
-          <p className="mt-[2px] text-red-600">{errors.password.message}</p>
+        {errors?.verifypassword && (
+          <span className="mt-[1px] text-[8px] text-red-600">
+            {errors?.verifypassword.message}
+          </span>
         )}
         <button
           type="submit"
